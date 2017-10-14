@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Bootstrap Example</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="/bootstrap/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+  <script src="/bootstrap/js/bootstrap.min.js"></script>
+</head>
+<body>
+
+<div class="container">
+  <h2>Google Users</h2>          
+  <table class="table">
+    <thead>
+      <tr>
+        <th>gmail</th>
+        <th>name</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{range $key, $value := .GUsers}}
+      <tr>
+        <td>{{$key}}</td>
+        <td>{{$value}}</td>
+      </tr>
+      {{end}}
+    </tbody>
+  </table>
+</div>
+
+<div class="container">
+    <h2>FaceBook Users</h2>          
+    <table class="table">
+      <thead>
+        <tr>
+          <th>gmail</th>
+          <th>name</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{range $key, $value := .FUsers}}
+        <tr>
+          <td>{{$key}}</td>
+          <td>{{$value}}</td>
+        </tr>
+        {{end}}
+      </tbody>
+    </table>
+  </div>
+</body>
+</html>
