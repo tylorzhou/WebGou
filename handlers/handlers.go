@@ -8,9 +8,9 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/BaapAPI/baapDB"
-	. "github.com/BaapAPI/baaplogger"
-	"github.com/BaapAPI/structs"
+	"github.com/WebGou/baapDB"
+	. "github.com/WebGou/baaplogger"
+	"github.com/WebGou/structs"
 	"github.com/gin-gonic/contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"golang.org/x/oauth2"
@@ -22,6 +22,13 @@ var (
 	gooleconf    *oauth2.Config
 	facebookconf *oauth2.Config
 	procred      ProvideCre
+	rm           = Rememberme{MaxAge: 86400 * 7}
+)
+
+const (
+	glogin = iota // google login
+	flogin        //facebook login
+	llogin        //customer local login
 )
 
 // Credentials which stores id and key.
@@ -134,6 +141,8 @@ func GoogleAuthHandler(c *gin.Context) {
 		baapDB.AddGoogleUser(u.Email, u.Name)
 	}
 
+	rm.SetCookie(session, u.Email, glogin)
+
 	c.HTML(http.StatusOK, "userls.tmpl", gin.H{"GUsers": baapDB.GetGUser(), "FUsers": baapDB.GetFUser()})
 }
 
@@ -177,6 +186,8 @@ func FaceBookAuthHandler(c *gin.Context) {
 		baapDB.AddFacebookUser(u.ID, u.Name)
 	}
 
+	session := sessions.Default(c)
+	rm.SetCookie(session, u.ID, flogin)
 	c.HTML(http.StatusOK, "userls.tmpl", gin.H{"GUsers": baapDB.GetGUser(), "FUsers": baapDB.GetFUser()})
 }
 
@@ -197,4 +208,13 @@ func FieldHandler(c *gin.Context) {
 	session := sessions.Default(c)
 	userID := session.Get("user-id")
 	c.HTML(http.StatusOK, "field.tmpl", gin.H{"user": userID})
+}
+
+//LoginCust handle custom login
+func LoginCust(c *gin.Context) {
+	name := c.PostForm("InputEmail")
+	pw := c.PostForm("InputPassword")
+	keeplogin := c.PostForm("keeplogin")
+	//rm.SetCookie(session, name, llogin)
+	Log.Informational("name: %s pw:%s keeplogin:%s\n", name, pw, keeplogin)
 }

@@ -4,12 +4,11 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"path/filepath"
 	"time"
 
-	"github.com/BaapAPI/baaplogger"
+	"github.com/WebGou/baaplogger"
 	_ "github.com/go-sql-driver/mysql"
 )
 
@@ -87,9 +86,6 @@ func AddGoogleUser(email, name string) error {
 	defer stmtIns.Close() // Close the statement when we leave main() / the program terminates
 
 	now := time.Now()
-
-	test := now.Format(mysqlDateFormat)
-	fmt.Print(test)
 
 	result, err := stmtIns.Exec(email, name, now.Format(mysqlDateFormat))
 	if err != nil {

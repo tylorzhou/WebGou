@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/BaapAPI/handlers"
-	"github.com/BaapAPI/middleware"
+	"github.com/WebGou/handlers"
+	"github.com/WebGou/middleware"
 	"github.com/gin-gonic/gin"
 )
 
@@ -15,6 +15,7 @@ func initrouter(router *gin.Engine) {
 
 	router.GET("/", handlers.IndexHandler)
 	router.GET("/login", handlers.LoginHandler)
+	router.POST("/login", handlers.LoginCust)
 	router.GET("/google/auth", handlers.GoogleAuthHandler)
 	router.GET("/facebook/auth", handlers.FaceBookAuthHandler)
 
