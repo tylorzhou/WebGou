@@ -234,3 +234,11 @@ func GetFUser() map[string]string {
 
 	return users
 }
+
+//Vtime for converting time.Time data
+type Vtime []byte
+
+//Time for converting time.Time data
+func (t *Vtime) Time() (time.Time, error) {
+	return time.Parse(mysqlDateFormat, string(*t))
+}

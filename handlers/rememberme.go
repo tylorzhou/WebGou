@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"encoding/gob"
 	"time"
 
 	"github.com/WebGou/baapDB"
@@ -14,13 +15,19 @@ type Rememberme struct {
 
 const (
 	rememberme = "rememberme"
+	//DefrmDur default duration 7 days
+	DefrmDur = 86400 * 7
 )
+
+func init() {
+	gob.Register(&LoginCookie{})
+}
 
 //Check if there is cookie
 func (c *Rememberme) Check(s sessions.Session) (selector, user string, err error) {
 	var now = time.Now()
 
-	l, ok := s.Get(rememberme).(LoginCookie)
+	l, ok := s.Get(rememberme).(*LoginCookie)
 	if !ok {
 		err = ErrorBadRMSessionFormat
 		return
@@ -48,7 +55,7 @@ func (c *Rememberme) Check(s sessions.Session) (selector, user string, err error
 
 //SetCookie set
 func (c *Rememberme) SetCookie(s sessions.Session, user string, logintype int) (err error) {
-	l := LoginCookie{
+	l := &LoginCookie{
 		CookieName: rememberme,
 	}
 
@@ -57,8 +64,10 @@ func (c *Rememberme) SetCookie(s sessions.Session, user string, logintype int) (
 		return
 	}
 
+	t := time.Now()
+	t = t.Add(c.MaxAge * time.Second)
 	// First save to the database
-	l.Selector, err = c.insert(user, hash, time.Now().Add(c.MaxAge), logintype)
+	l.Selector, err = c.insert(user, hash, t, logintype)
 	if err != nil {
 		return
 	}

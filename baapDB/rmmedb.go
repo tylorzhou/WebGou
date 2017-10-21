@@ -42,14 +42,20 @@ func Rmmeinsert(user, hash string, expiration time.Time, logintype int) (selecto
 //Rmmeget get remember me info
 func Rmmeget(selector string) (user string, hash string, expiration time.Time, err error) {
 
-	err = db.QueryRow("SELECT user, hash, expiration FROM Rememberme WHERE selector=?", selector).Scan(&user, &hash, &expiration)
+	var t Vtime
+	err = db.QueryRow("SELECT user, hash, expiration FROM Rememberme WHERE selector=?", selector).Scan(&user, &hash, &t)
 	switch {
 	case err == sql.ErrNoRows:
 		dblog.Debug("no rememberme for %s", selector)
 	case err != nil:
 		dblog.Error("Rmmeget: %s", err.Error())
 	default:
-		fmt.Printf("get user info for %s from rememberme\n", selector)
+		expiration, err = t.Time()
+		if err != nil {
+			dblog.Error("convert time %s", err)
+			fmt.Printf("get user info for %s from rememberme\n", selector)
+		}
+
 	}
 	return
 }

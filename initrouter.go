@@ -19,10 +19,11 @@ func initrouter(router *gin.Engine) {
 	router.GET("/google/auth", handlers.GoogleAuthHandler)
 	router.GET("/facebook/auth", handlers.FaceBookAuthHandler)
 
-	authorized := router.Group("/battle")
+	authorized := router.Group("/group")
 	authorized.Use(middleware.AuthorizeRequest())
 	{
 		authorized.GET("/field", handlers.FieldHandler)
+		authorized.GET("/loginusers", handlers.Loginusers)
 	}
 
 }

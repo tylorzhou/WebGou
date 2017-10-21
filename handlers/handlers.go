@@ -141,8 +141,18 @@ func GoogleAuthHandler(c *gin.Context) {
 		baapDB.AddGoogleUser(u.Email, u.Name)
 	}
 
+	session.Options(sessions.Options{
+		Path:   "/",
+		MaxAge: 0,
+	}) // thirdpart provider do need persistent cookie
+
 	rm.SetCookie(session, u.Email, glogin)
 
+	c.HTML(http.StatusOK, "userls.tmpl", gin.H{"GUsers": baapDB.GetGUser(), "FUsers": baapDB.GetFUser()})
+}
+
+//Loginusers handle login users
+func Loginusers(c *gin.Context) {
 	c.HTML(http.StatusOK, "userls.tmpl", gin.H{"GUsers": baapDB.GetGUser(), "FUsers": baapDB.GetFUser()})
 }
 
@@ -187,6 +197,11 @@ func FaceBookAuthHandler(c *gin.Context) {
 	}
 
 	session := sessions.Default(c)
+
+	session.Options(sessions.Options{
+		Path:   "/",
+		MaxAge: 0,
+	}) // thirdpart provider do need persistent cookie
 	rm.SetCookie(session, u.ID, flogin)
 	c.HTML(http.StatusOK, "userls.tmpl", gin.H{"GUsers": baapDB.GetGUser(), "FUsers": baapDB.GetFUser()})
 }
