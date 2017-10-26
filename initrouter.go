@@ -16,6 +16,9 @@ func initrouter(router *gin.Engine) {
 	router.GET("/", handlers.IndexHandler)
 	router.GET("/login", handlers.LoginHandler)
 	router.POST("/login", handlers.LoginCust)
+	router.GET("/signup", handlers.SignupG)
+	router.POST("/signup", handlers.SignupP)
+
 	router.GET("/google/auth", handlers.GoogleAuthHandler)
 	router.GET("/facebook/auth", handlers.FaceBookAuthHandler)
 

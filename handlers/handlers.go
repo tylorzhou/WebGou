@@ -212,10 +212,11 @@ func LoginHandler(c *gin.Context) {
 	session := sessions.Default(c)
 	session.Set("state", state)
 	Log.Informational("Stored session: %v\n", state)
-	session.Save()
 	glink := getLoginURL(state, "google")
 	flink := getLoginURL(state, "facebook")
-	c.HTML(http.StatusOK, "login.tmpl", gin.H{"glink": glink, "flink": flink})
+	loginerr := session.Flashes("loginerr")[0]
+	session.Save()
+	c.HTML(http.StatusOK, "login.tmpl", gin.H{"glink": glink, "flink": flink, "loginerr": loginerr})
 }
 
 // FieldHandler is a rudementary handler for logged in users.
@@ -230,6 +231,91 @@ func LoginCust(c *gin.Context) {
 	name := c.PostForm("InputEmail")
 	pw := c.PostForm("InputPassword")
 	keeplogin := c.PostForm("keeplogin")
-	//rm.SetCookie(session, name, llogin)
+
 	Log.Informational("name: %s pw:%s keeplogin:%s\n", name, pw, keeplogin)
+
+	err := baapDB.LoginLocalUser(name, pw)
+	s := sessions.Default(c)
+	if err != nil {
+		Log.Informational("login name %s pw %s err %s", name, pw, err.Error())
+
+		s.AddFlash(err.Error(), "loginerr")
+		s.Save()
+		c.Redirect(http.StatusMovedPermanently, "/login")
+	} else {
+		rm.SetCookie(s, name, llogin)
+		c.Redirect(http.StatusMovedPermanently, "/group/loginusers")
+	}
+
+}
+
+//SignupG to get sign up page
+func SignupG(c *gin.Context) {
+	c.HTML(http.StatusOK, "signup.tmpl", gin.H{
+		"name":   "",
+		"em":     "",
+		"pw":     "",
+		"pwc":    "",
+		"namerr": "",
+		"emerr":  "",
+		"pwerr":  "",
+		"pwcerr": "",
+	})
+}
+
+//SignupP to signup
+func SignupP(c *gin.Context) {
+
+	name := c.PostForm("username")
+	em := c.PostForm("email")
+	pw := c.PostForm("password")
+	pwc := c.PostForm("password_confirm")
+
+	var namerr, emerr, pwerr, pwcerr string
+	if len(name) == 0 {
+		namerr = "name cannot be null"
+	}
+
+	if em == "" {
+		emerr = "email cannot be null"
+	}
+
+	if pw == "" {
+		pwerr = "password cannot be null"
+	}
+
+	if pwc == "" {
+		pwcerr = "confirm password cannot be null"
+	}
+
+	if pw != "" && pwc != "" && pw != pwc {
+		pwcerr = "confirm password is not the same as password"
+	}
+
+	if emerr == "" && pwerr == "" && pwcerr == "" && namerr == "" {
+		_, b := baapDB.CheckLocalUser(em)
+		if b {
+			emerr = "this email already registered"
+		} else {
+			err := baapDB.AddLocalUser(name, em, pw)
+			if err != nil {
+				Log.Error("Addlocauser failed, name: %s em: %s", name, em)
+			} else {
+				c.Redirect(http.StatusMovedPermanently, "/login")
+				return
+			}
+		}
+	}
+
+	c.HTML(http.StatusOK, "signup.tmpl", gin.H{
+		"name":   name,
+		"em":     em,
+		"pw":     pw,
+		"pwc":    pwc,
+		"namerr": namerr,
+		"emerr":  emerr,
+		"pwerr":  pwerr,
+		"pwcerr": pwcerr,
+	})
+
 }

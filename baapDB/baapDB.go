@@ -10,6 +10,7 @@ import (
 
 	"github.com/WebGou/baaplogger"
 	_ "github.com/go-sql-driver/mysql"
+	"golang.org/x/crypto/bcrypt"
 )
 
 // DBconfig which store db setting.
@@ -241,4 +242,61 @@ type Vtime []byte
 //Time for converting time.Time data
 func (t *Vtime) Time() (time.Time, error) {
 	return time.Parse(mysqlDateFormat, string(*t))
+}
+
+//AddLocalUser add local user
+func AddLocalUser(user, em, pw string) error {
+
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(pw), bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
+
+	now := time.Now()
+	_, err = db.Exec("INSERT INTO LocalUser(name, email, pw, created) VALUES(?, ?, ?, ?)", user, em, hashedPassword, now.Format(mysqlDateFormat))
+
+	if err != nil {
+		dblog.Debug(err.Error())
+	}
+
+	return nil
+}
+
+//CheckLocalUser check if local user exist
+func CheckLocalUser(em string) (user string, b bool) {
+	err := db.QueryRow("SELECT name FROM LocalUser WHERE email=?", em).Scan(&user)
+	switch {
+	case err == sql.ErrNoRows:
+		b = false
+	case err != nil:
+		dblog.Error("CheckLocalUser: %s", err.Error())
+	default:
+		b = true
+	}
+	return
+}
+
+//LoginLocalUser try to login local user
+func LoginLocalUser(em, pw string) error {
+
+	_, b := CheckLocalUser(em)
+	if !b {
+		return errors.New(em + " not exist, please check if you registered.")
+	}
+
+	var dpw string
+	err := db.QueryRow("SELECT pw FROM LocalUser WHERE email=?", em).Scan(&dpw)
+	switch {
+	case err == sql.ErrNoRows:
+		dblog.Error("System error, the user should be there with password")
+	case err != nil:
+		dblog.Error("LoginLocalUser: %s", err.Error())
+	default:
+		err = bcrypt.CompareHashAndPassword([]byte(dpw), []byte(pw))
+		if err != nil {
+			return errors.New("Wrong password for user " + em)
+		}
+	}
+	return nil
+
 }

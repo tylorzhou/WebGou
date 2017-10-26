@@ -113,6 +113,7 @@
 			<ul id="login-dp" class="dropdown-menu">
 				<li>
 					 <div class="row">
+                     
 							<div class="col-md-12">
 								Login via
 								<div class="social-buttons">
@@ -151,5 +152,10 @@
     </div><!-- /.navbar-collapse -->
   </div><!-- /.container-fluid -->
 </nav>
+{{if ne .loginerr ""}}
+    <div class="alert alert-danger alert-dismissable">
+    <strong>error!</strong>{{.loginerr}}
+    </div>
+{{end}}
 </body>
 </html>
