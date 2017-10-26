@@ -14,7 +14,7 @@ var (
 )
 
 func init() {
-	rm = handlers.Rememberme{MaxAge: handlers.DefrmDur}
+	rm = handlers.Rememberme{}
 }
 
 // AuthorizeRequest is used to authorize a request for a certain end-point group.
@@ -22,7 +22,7 @@ func AuthorizeRequest() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		session := sessions.Default(c)
 
-		selector, user, err := rm.Check(session)
+		selector, user, logintype, err := rm.Check(session)
 
 		if err != nil {
 			if err.Error() != "session expired" {
@@ -32,7 +32,7 @@ func AuthorizeRequest() gin.HandlerFunc {
 			c.HTML(http.StatusUnauthorized, "error.tmpl", gin.H{"message": "Please login."})
 			c.Abort()
 		}
-		rm.UpdateCookie(session, selector, user)
+		rm.UpdateCookie(session, selector, user, logintype)
 		c.Next()
 	}
 }

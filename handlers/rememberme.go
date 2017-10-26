@@ -10,7 +10,6 @@ import (
 
 //Rememberme for remember me feaure
 type Rememberme struct {
-	MaxAge time.Duration
 }
 
 const (
@@ -24,7 +23,7 @@ func init() {
 }
 
 //Check if there is cookie
-func (c *Rememberme) Check(s sessions.Session) (selector, user string, err error) {
+func (c *Rememberme) Check(s sessions.Session) (selector, user string, logintype int, err error) {
 	var now = time.Now()
 
 	l, ok := s.Get(rememberme).(*LoginCookie)
@@ -34,7 +33,7 @@ func (c *Rememberme) Check(s sessions.Session) (selector, user string, err error
 	}
 
 	var hash string
-	user, hash, expires, err := c.get(l.Selector)
+	user, hash, expires, logintype, err := c.get(l.Selector)
 	if err != nil {
 		return
 	}
@@ -54,7 +53,7 @@ func (c *Rememberme) Check(s sessions.Session) (selector, user string, err error
 }
 
 //SetCookie set
-func (c *Rememberme) SetCookie(s sessions.Session, user string, logintype int) (err error) {
+func (c *Rememberme) SetCookie(s sessions.Session, user string, logintype int, MaxAge time.Duration) (err error) {
 	l := &LoginCookie{
 		CookieName: rememberme,
 	}
@@ -65,7 +64,7 @@ func (c *Rememberme) SetCookie(s sessions.Session, user string, logintype int) (
 	}
 
 	t := time.Now()
-	t = t.Add(c.MaxAge * time.Second)
+	t = t.Add(MaxAge * time.Second)
 	// First save to the database
 	l.Selector, err = c.insert(user, hash, t, logintype)
 	if err != nil {
@@ -79,7 +78,7 @@ func (c *Rememberme) SetCookie(s sessions.Session, user string, logintype int) (
 }
 
 //UpdateCookie update
-func (c *Rememberme) UpdateCookie(s sessions.Session, selector, user string) (err error) {
+func (c *Rememberme) UpdateCookie(s sessions.Session, selector, user string, MaxAge time.Duration, logintype int) (err error) {
 	l := LoginCookie{
 		Selector:   selector,
 		CookieName: rememberme,
@@ -90,8 +89,14 @@ func (c *Rememberme) UpdateCookie(s sessions.Session, selector, user string) (er
 		return
 	}
 
+	if logintype == llogin {
+		MaxAge = LuserTimeout
+	} else {
+		MaxAge = ThirdTimeout
+	}
+
 	// First save to the database
-	err = c.update(selector, user, hash, time.Now().Add(c.MaxAge))
+	err = c.update(selector, user, hash, time.Now().Add(MaxAge))
 	if err != nil {
 		return
 	}
@@ -102,7 +107,7 @@ func (c *Rememberme) UpdateCookie(s sessions.Session, selector, user string) (er
 	return
 }
 
-func (c *Rememberme) get(selector string) (user string, hash string, expiration time.Time, err error) {
+func (c *Rememberme) get(selector string) (user string, hash string, expiration time.Time, logintype int, err error) {
 	return baapDB.Rmmeget(selector)
 }
 func (c *Rememberme) insert(user, hash string, expiration time.Time, logintype int) (selector string, err error) {

@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/WebGou/baapDB"
 	. "github.com/WebGou/baaplogger"
@@ -22,7 +23,10 @@ var (
 	gooleconf    *oauth2.Config
 	facebookconf *oauth2.Config
 	procred      ProvideCre
-	rm           = Rememberme{MaxAge: 86400 * 7}
+	//ThirdTimeout thirdpart indent provider Database timeout
+	ThirdTimeout time.Duration = 86400
+	//LuserTimeout local user DB session timeout
+	LuserTimeout time.Duration = 86400 * 7
 )
 
 const (
@@ -145,8 +149,8 @@ func GoogleAuthHandler(c *gin.Context) {
 		Path:   "/",
 		MaxAge: 0,
 	}) // thirdpart provider do need persistent cookie
-
-	rm.SetCookie(session, u.Email, glogin)
+	rm := Rememberme{}
+	rm.SetCookie(session, u.Email, glogin, ThirdTimeout)
 
 	c.HTML(http.StatusOK, "userls.tmpl", gin.H{"GUsers": baapDB.GetGUser(), "FUsers": baapDB.GetFUser()})
 }
@@ -202,7 +206,8 @@ func FaceBookAuthHandler(c *gin.Context) {
 		Path:   "/",
 		MaxAge: 0,
 	}) // thirdpart provider do need persistent cookie
-	rm.SetCookie(session, u.ID, flogin)
+	rm := Rememberme{}
+	rm.SetCookie(session, u.ID, flogin, ThirdTimeout)
 	c.HTML(http.StatusOK, "userls.tmpl", gin.H{"GUsers": baapDB.GetGUser(), "FUsers": baapDB.GetFUser()})
 }
 
@@ -254,7 +259,8 @@ func LoginCust(c *gin.Context) {
 				MaxAge: 0,
 			})
 		}
-		rm.SetCookie(s, name, llogin)
+		rm := Rememberme{}
+		rm.SetCookie(s, name, llogin, LuserTimeout)
 		c.Redirect(http.StatusMovedPermanently, "/group/loginusers")
 	}
 
