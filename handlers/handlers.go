@@ -214,7 +214,12 @@ func LoginHandler(c *gin.Context) {
 	Log.Informational("Stored session: %v\n", state)
 	glink := getLoginURL(state, "google")
 	flink := getLoginURL(state, "facebook")
-	loginerr := session.Flashes("loginerr")[0]
+	loginerr := ""
+	info := session.Flashes("loginerr")
+	if len(info) > 0 {
+		loginerr = info[0].(string)
+	}
+
 	session.Save()
 	c.HTML(http.StatusOK, "login.tmpl", gin.H{"glink": glink, "flink": flink, "loginerr": loginerr})
 }
@@ -238,11 +243,17 @@ func LoginCust(c *gin.Context) {
 	s := sessions.Default(c)
 	if err != nil {
 		Log.Informational("login name %s pw %s err %s", name, pw, err.Error())
-
 		s.AddFlash(err.Error(), "loginerr")
+
 		s.Save()
 		c.Redirect(http.StatusMovedPermanently, "/login")
 	} else {
+		if keeplogin == "0" {
+			s.Options(sessions.Options{
+				Path:   "/",
+				MaxAge: 0,
+			})
+		}
 		rm.SetCookie(s, name, llogin)
 		c.Redirect(http.StatusMovedPermanently, "/group/loginusers")
 	}
