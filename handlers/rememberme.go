@@ -78,7 +78,7 @@ func (c *Rememberme) SetCookie(s sessions.Session, user string, logintype int, M
 }
 
 //UpdateCookie update
-func (c *Rememberme) UpdateCookie(s sessions.Session, selector, user string, MaxAge time.Duration, logintype int) (err error) {
+func (c *Rememberme) UpdateCookie(s sessions.Session, selector, user string, logintype int) (err error) {
 	l := LoginCookie{
 		Selector:   selector,
 		CookieName: rememberme,
@@ -89,6 +89,7 @@ func (c *Rememberme) UpdateCookie(s sessions.Session, selector, user string, Max
 		return
 	}
 
+	var MaxAge time.Duration
 	if logintype == llogin {
 		MaxAge = LuserTimeout
 	} else {
