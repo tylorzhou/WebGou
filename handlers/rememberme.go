@@ -65,6 +65,7 @@ func (c *Rememberme) SetCookie(s sessions.Session, user string, logintype int, M
 
 	t := time.Now()
 	t = t.Add(MaxAge * time.Second)
+
 	// First save to the database
 	l.Selector, err = c.insert(user, hash, t, logintype)
 	if err != nil {
@@ -97,7 +98,7 @@ func (c *Rememberme) UpdateCookie(s sessions.Session, selector, user string, log
 	}
 
 	// First save to the database
-	err = c.update(selector, user, hash, time.Now().Add(MaxAge))
+	err = c.update(selector, user, hash, time.Now().Add(MaxAge*time.Second))
 	if err != nil {
 		return
 	}

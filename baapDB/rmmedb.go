@@ -62,9 +62,10 @@ func Rmmeget(selector string) (user string, hash string, expiration time.Time, l
 func Rmmeupdate(selector, user, hash string, expiration time.Time) (err error) {
 	addError := errors.New("Rmmeupdate failed")
 
-	stmtIns, err := db.Prepare("UPDATE Rememberme SET validator=?, expiration =? WHERE selector=?")
+	stmtIns, err := db.Prepare("UPDATE Rememberme SET hash=?, expiration =? WHERE selector=?")
 	if err != nil {
 		dblog.Error("db prepare failed: %s", err.Error())
+		return err
 	}
 	defer stmtIns.Close()
 

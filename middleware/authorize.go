@@ -31,8 +31,10 @@ func AuthorizeRequest() gin.HandlerFunc {
 
 			c.HTML(http.StatusUnauthorized, "error.tmpl", gin.H{"message": "Please login."})
 			c.Abort()
+		} else {
+			rm.UpdateCookie(session, selector, user, logintype)
 		}
-		rm.UpdateCookie(session, selector, user, logintype)
+
 		c.Next()
 	}
 }
