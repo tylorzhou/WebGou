@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -244,6 +245,7 @@ func LoginCust(c *gin.Context) {
 
 	Log.Informational("name: %s pw:%s keeplogin:%s\n", name, pw, keeplogin)
 
+	fmt.Printf("%v", c.ClientIP())
 	err := baapDB.LoginLocalUser(name, pw)
 	s := sessions.Default(c)
 	if err != nil {
@@ -251,7 +253,7 @@ func LoginCust(c *gin.Context) {
 		s.AddFlash(err.Error(), "loginerr")
 
 		s.Save()
-		c.Redirect(http.StatusMovedPermanently, "/login")
+		c.Redirect(http.StatusFound, "/login")
 	} else {
 		if keeplogin == "0" {
 			s.Options(sessions.Options{
@@ -261,7 +263,7 @@ func LoginCust(c *gin.Context) {
 		}
 		rm := Rememberme{}
 		rm.SetCookie(s, name, llogin, LuserTimeout)
-		c.Redirect(http.StatusMovedPermanently, "/group/loginusers")
+		c.Redirect(http.StatusFound, "/dashboard")
 	}
 
 }
@@ -318,7 +320,7 @@ func SignupP(c *gin.Context) {
 			if err != nil {
 				Log.Error("Addlocauser failed, name: %s em: %s", name, em)
 			} else {
-				c.Redirect(http.StatusMovedPermanently, "/login")
+				c.Redirect(http.StatusFound, "/login")
 				return
 			}
 		}
@@ -335,4 +337,25 @@ func SignupP(c *gin.Context) {
 		"pwcerr": pwcerr,
 	})
 
+}
+
+//Dashboard just for test
+func Dashboard(c *gin.Context) {
+	s := sessions.Default(c)
+	user := GetUser(s)
+
+	c.HTML(http.StatusOK, "dashboard.tmpl", gin.H{"user": user})
+}
+
+//Logout when logout
+func Logout(c *gin.Context) {
+
+	s := sessions.Default(c)
+	s.Options(sessions.Options{
+		Path:   "/",
+		MaxAge: -1,
+	})
+	s.Set("logout", "1")
+	s.Save()
+	c.Redirect(http.StatusFound, "/login")
 }

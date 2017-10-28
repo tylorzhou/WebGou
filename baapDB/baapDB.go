@@ -276,6 +276,34 @@ func CheckLocalUser(em string) (user string, b bool) {
 	return
 }
 
+//CheckGUser check if google user exist
+func CheckGUser(em string) (user string, b bool) {
+	err := db.QueryRow("SELECT name FROM GoogleUser WHERE email=?", em).Scan(&user)
+	switch {
+	case err == sql.ErrNoRows:
+		b = false
+	case err != nil:
+		dblog.Error("CheckGUser: %s", err.Error())
+	default:
+		b = true
+	}
+	return
+}
+
+//CheckFUser check if facebook user exist
+func CheckFUser(id string) (user string, b bool) {
+	err := db.QueryRow("SELECT name FROM FacebookUser WHERE id=?", id).Scan(&user)
+	switch {
+	case err == sql.ErrNoRows:
+		b = false
+	case err != nil:
+		dblog.Error("CheckFUser: %s", err.Error())
+	default:
+		b = true
+	}
+	return
+}
+
 //LoginLocalUser try to login local user
 func LoginLocalUser(em, pw string) error {
 
