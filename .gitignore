@@ -1,0 +1,7 @@
+client_secret.json
+DBsetting.json
+log/*
+debug
+.vscode/launch.json
+static/*
+images/*
