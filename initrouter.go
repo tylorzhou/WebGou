@@ -12,6 +12,8 @@ func initrouter(router *gin.Engine) {
 	router.Static("/font-awesome", "./static/font-awesome-4.7.0")
 	router.Static("/background", "./static/background")
 	router.Static("/assets", "./static/assets")
+	router.Static("/gallery-templates", "./static/bootstrap-gallery-templates")
+	router.Static("/images", "./images")
 	router.LoadHTMLGlob("templates/*")
 
 	router.GET("/", handlers.IndexHandler)
