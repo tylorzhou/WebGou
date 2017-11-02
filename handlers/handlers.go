@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/WebGou/baapDB"
@@ -28,6 +29,10 @@ var (
 	ThirdTimeout time.Duration = 86400
 	//LuserTimeout local user DB session timeout
 	LuserTimeout time.Duration = 86400 * 7
+)
+
+var (
+	exePath = ""
 )
 
 const (
@@ -89,6 +94,12 @@ func init() {
 		Endpoint:     facebook.Endpoint,
 	}
 
+	exe, err := os.Executable()
+	if err != nil {
+		Log.Error("cannot get executable path")
+		os.Exit(1)
+	}
+	exePath = filepath.Dir(exe)
 }
 
 // IndexHandler handels /.
@@ -153,7 +164,7 @@ func GoogleAuthHandler(c *gin.Context) {
 	rm := Rememberme{}
 	rm.SetCookie(session, u.Email, glogin, ThirdTimeout)
 
-	c.HTML(http.StatusOK, "userls.tmpl", gin.H{"GUsers": baapDB.GetGUser(), "FUsers": baapDB.GetFUser()})
+	c.Redirect(http.StatusFound, "/user/dashboard")
 }
 
 //Loginusers handle login users
@@ -209,7 +220,7 @@ func FaceBookAuthHandler(c *gin.Context) {
 	}) // thirdpart provider do need persistent cookie
 	rm := Rememberme{}
 	rm.SetCookie(session, u.ID, flogin, ThirdTimeout)
-	c.HTML(http.StatusOK, "userls.tmpl", gin.H{"GUsers": baapDB.GetGUser(), "FUsers": baapDB.GetFUser()})
+	c.Redirect(http.StatusFound, "/user/dashboard")
 }
 
 // LoginHandler handles the login procedure.
@@ -263,7 +274,7 @@ func LoginCust(c *gin.Context) {
 		}
 		rm := Rememberme{}
 		rm.SetCookie(s, name, llogin, LuserTimeout)
-		c.Redirect(http.StatusFound, "/dashboard")
+		c.Redirect(http.StatusFound, "/user/dashboard")
 	}
 
 }
@@ -312,7 +323,7 @@ func SignupP(c *gin.Context) {
 	}
 
 	if emerr == "" && pwerr == "" && pwcerr == "" && namerr == "" {
-		_, b := baapDB.CheckLocalUser(em)
+		_, _, b := baapDB.CheckLocalUser(em)
 		if b {
 			emerr = "this email already registered"
 		} else {
@@ -339,10 +350,53 @@ func SignupP(c *gin.Context) {
 
 }
 
+//GalleryDetail just for test
+func GalleryDetail(c *gin.Context) {
+	//s := sessions.Default(c)
+	//user := GetUser(s)
+	user := c.Param("user")
+
+	id := c.Param("id")
+	timestamp := c.Param("timestamp")
+
+	if (user != "guser" && user != "fuser" && user != "luser") || id == "" || timestamp == "" {
+		c.AbortWithStatus(http.StatusBadRequest)
+		return
+	}
+
+	path := filepath.Join(exePath, "images", user, id, timestamp)
+
+	if _, err := os.Stat(path); err != nil {
+		if os.IsNotExist(err) {
+			// file does not exist
+			c.AbortWithStatus(http.StatusNotFound)
+
+		} else {
+			// other error
+			c.AbortWithStatus(http.StatusBadRequest)
+
+		}
+		return
+	}
+
+	picsinfo, err := ioutil.ReadDir(path)
+	if err != nil {
+		Log.Error(err.Error())
+		return
+	}
+	var pics []string
+	p := filepath.Join("/images", user, id, timestamp)
+	for _, f := range picsinfo {
+		pics = append(pics, filepath.Join(p, f.Name()))
+	}
+
+	c.HTML(http.StatusOK, "fluid-gallery.tmpl", gin.H{"pics": pics})
+}
+
 //Dashboard just for test
 func Dashboard(c *gin.Context) {
 	s := sessions.Default(c)
-	user := GetUser(s)
+	user, _ := GetUser(s)
 
 	c.HTML(http.StatusOK, "dashboard.tmpl", gin.H{"user": user})
 }

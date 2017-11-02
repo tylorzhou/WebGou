@@ -7,22 +7,35 @@ import (
 )
 
 //GetUser get user name by session
-func GetUser(s sessions.Session) (user string) {
+func GetUser(s sessions.Session) (user string, uid int) {
 	var rm Rememberme
 	_, userkey, logintype, err := rm.Check(s)
 	if err != nil {
 		Log.Error("GetUser failed %s", err.Error())
+		return "", 0
 	}
 
 	switch logintype {
 	case llogin:
-		user, _ = baapDB.CheckLocalUser(userkey)
+		user, uid, _ = baapDB.CheckLocalUser(userkey)
 	case glogin:
-		user, _ = baapDB.CheckGUser(userkey)
+		user, uid, _ = baapDB.CheckGUser(userkey)
 	case flogin:
-		user, _ = baapDB.CheckFUser(userkey)
+		user, uid, _ = baapDB.CheckFUser(userkey)
 	default:
 		Log.Error("GetUser failed with empty user")
+	}
+
+	return
+
+}
+
+//GetUserkey get user key and logintype by session
+func GetUserkey(s sessions.Session) (userkey string, logintype int, err error) {
+	var rm Rememberme
+	_, userkey, logintype, err = rm.Check(s)
+	if err != nil {
+		Log.Error("GetUser failed %s", err.Error())
 	}
 
 	return

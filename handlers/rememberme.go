@@ -80,7 +80,7 @@ func (c *Rememberme) SetCookie(s sessions.Session, user string, logintype int, M
 
 //UpdateCookie update
 func (c *Rememberme) UpdateCookie(s sessions.Session, selector, user string, logintype int) (err error) {
-	l := LoginCookie{
+	l := &LoginCookie{
 		Selector:   selector,
 		CookieName: rememberme,
 	}

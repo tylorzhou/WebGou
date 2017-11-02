@@ -263,8 +263,8 @@ func AddLocalUser(user, em, pw string) error {
 }
 
 //CheckLocalUser check if local user exist
-func CheckLocalUser(em string) (user string, b bool) {
-	err := db.QueryRow("SELECT name FROM LocalUser WHERE email=?", em).Scan(&user)
+func CheckLocalUser(em string) (user string, uid int, b bool) {
+	err := db.QueryRow("SELECT name, uid FROM LocalUser WHERE email=?", em).Scan(&user, &uid)
 	switch {
 	case err == sql.ErrNoRows:
 		b = false
@@ -277,8 +277,8 @@ func CheckLocalUser(em string) (user string, b bool) {
 }
 
 //CheckGUser check if google user exist
-func CheckGUser(em string) (user string, b bool) {
-	err := db.QueryRow("SELECT name FROM GoogleUser WHERE email=?", em).Scan(&user)
+func CheckGUser(em string) (user string, uid int, b bool) {
+	err := db.QueryRow("SELECT name, uid FROM GoogleUser WHERE email=?", em).Scan(&user, &uid)
 	switch {
 	case err == sql.ErrNoRows:
 		b = false
@@ -291,8 +291,8 @@ func CheckGUser(em string) (user string, b bool) {
 }
 
 //CheckFUser check if facebook user exist
-func CheckFUser(id string) (user string, b bool) {
-	err := db.QueryRow("SELECT name FROM FacebookUser WHERE id=?", id).Scan(&user)
+func CheckFUser(id string) (user string, uid int, b bool) {
+	err := db.QueryRow("SELECT name, uid FROM FacebookUser WHERE id=?", id).Scan(&user, &uid)
 	switch {
 	case err == sql.ErrNoRows:
 		b = false
@@ -307,7 +307,7 @@ func CheckFUser(id string) (user string, b bool) {
 //LoginLocalUser try to login local user
 func LoginLocalUser(em, pw string) error {
 
-	_, b := CheckLocalUser(em)
+	_, _, b := CheckLocalUser(em)
 	if !b {
 		return errors.New(em + " not exist, please check if you registered.")
 	}

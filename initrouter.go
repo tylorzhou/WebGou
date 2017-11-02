@@ -24,16 +24,19 @@ func initrouter(router *gin.Engine) {
 
 	router.GET("/logout", handlers.Logout)
 
-	router.GET("/dashboard", handlers.Dashboard)
+	router.GET("/GalleryDetail/:user/:id/:timestamp", handlers.GalleryDetail)
 
 	router.GET("/google/auth", handlers.GoogleAuthHandler)
 	router.GET("/facebook/auth", handlers.FaceBookAuthHandler)
 
-	authorized := router.Group("/group")
+	authorized := router.Group("/user")
 	authorized.Use(middleware.AuthorizeRequest())
 	{
-		authorized.GET("/field", handlers.FieldHandler)
 		authorized.GET("/loginusers", handlers.Loginusers)
+		authorized.GET("/dashboard", handlers.Dashboard)
+
+		authorized.POST("/imageupload", handlers.ImageuploadP)
+		authorized.GET("/imageupload", handlers.ImageuploadG)
 	}
 
 }

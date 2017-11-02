@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
     <link href="https://fonts.googleapis.com/css?family=Droid+Sans:400,700" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/baguettebox.js/1.8.1/baguetteBox.min.css">
-    <link rel="stylesheet" href="fluid-gallery.css">
+    <link rel="stylesheet" href="/gallery-templates/fluid-gallery.css">
 
 
 </head>
@@ -27,36 +27,30 @@
 
         <div class="row">
 
-            <div class="col-sm-12 col-md-4">
-                <a class="lightbox" href="../images/bridge.jpg">
-                    <img src="../images/bridge.jpg" alt="Bridge">
-                </a>
-            </div>
-            <div class="col-sm-6 col-md-4">
-                <a class="lightbox" href="../images/park.jpg">
-                    <img src="../images/park.jpg" alt="Park">
-                </a>
-            </div>
-            <div class="col-sm-6 col-md-4">
-                <a class="lightbox" href="../images/tunnel.jpg">
-                    <img src="../images/tunnel.jpg" alt="Tunnel">
-                </a>
-            </div>
-            <div class="col-sm-12 col-md-8">
-                <a class="lightbox" href="../images/traffic.jpg">
-                    <img src="../images/traffic.jpg" alt="Traffic">
-                </a>
-            </div>
-            <div class="col-sm-6 col-md-4">
-                <a class="lightbox" href="../images/coast.jpg">
-                    <img src="../images/coast.jpg" alt="Coast">
-                </a>
-            </div> 
-            <div class="col-sm-6 col-md-4">
-                <a class="lightbox" href="../images/rails.jpg">
-                    <img src="../images/rails.jpg" alt="Rails">
-                </a>
-            </div>
+        {{range $i, $e := .pics}}
+
+            {{if eq $i 0}}
+                <div class="col-sm-12 col-md-4">
+                    <a class="lightbox" href="{{$e}}">
+                        <img src="{{$e}}" alt="Bridge">
+                    </a>
+                </div>
+            {{else if eq $i 3}}
+                <div class="col-sm-12 col-md-8">
+                    <a class="lightbox" href="{{$e}}">
+                        <img src="{{$e}}" alt="Bridge">
+                    </a>
+                </div>
+            {{else }}
+                <div class="col-sm-6 col-md-4">
+                    <a class="lightbox" href="{{$e}}">
+                    <img src="{{$e}}" alt="Bridge">
+                    </a>
+                </div>
+            {{end}}
+
+        {{end}}
+
 
         </div>
 
