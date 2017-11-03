@@ -50,7 +50,7 @@ func ImageuploadP(c *gin.Context) {
 			break
 		}
 
-		name := "image" + strconv.Itoa(i)
+		name := "image" + strconv.Itoa(i) + filepath.Ext(file.Filename)
 		err := c.SaveUploadedFile(file, filepath.Join(path, name))
 		if err != nil {
 			Log.Error("upload image failed user: %s logintype: %d ,uid: %d,upload files: %s => %s, err %s", user, logintype,

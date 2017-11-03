@@ -387,6 +387,7 @@ func GalleryDetail(c *gin.Context) {
 	var pics []string
 	p := filepath.Join("/images", user, id, timestamp)
 	for _, f := range picsinfo {
+
 		pics = append(pics, filepath.Join(p, f.Name()))
 	}
 
@@ -396,7 +397,7 @@ func GalleryDetail(c *gin.Context) {
 //Dashboard just for test
 func Dashboard(c *gin.Context) {
 	s := sessions.Default(c)
-	_, uid, logintype := GetUser(s)
+	user, uid, logintype := GetUser(s)
 
 	tablename := baapDB.GImgTblName(logintype, uid)
 	imagels, err := baapDB.GetAllImages(tablename)
@@ -407,7 +408,7 @@ func Dashboard(c *gin.Context) {
 		return
 	}
 
-	c.HTML(http.StatusOK, "dashboard.tmpl", gin.H{"imagels": imagels})
+	c.HTML(http.StatusOK, "dashboard.tmpl", gin.H{"user": user, "imagels": imagels})
 }
 
 //Logout when logout
