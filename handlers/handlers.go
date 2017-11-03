@@ -396,9 +396,18 @@ func GalleryDetail(c *gin.Context) {
 //Dashboard just for test
 func Dashboard(c *gin.Context) {
 	s := sessions.Default(c)
-	user, _ := GetUser(s)
+	_, uid, logintype := GetUser(s)
 
-	c.HTML(http.StatusOK, "dashboard.tmpl", gin.H{"user": user})
+	tablename := baapDB.GImgTblName(logintype, uid)
+	imagels, err := baapDB.GetAllImages(tablename)
+
+	if err != nil {
+		Log.Error("Dashboard get images err: %v", err)
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
+
+	c.HTML(http.StatusOK, "dashboard.tmpl", gin.H{"imagels": imagels})
 }
 
 //Logout when logout

@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/WebGou/baapDB"
 	. "github.com/WebGou/baaplogger"
 	"github.com/gin-gonic/contrib/sessions"
 	"github.com/gin-gonic/gin"
@@ -27,7 +28,7 @@ func ImageuploadP(c *gin.Context) {
 		return
 	}
 
-	user, uid := GetUser(s)
+	user, uid, _ := GetUser(s)
 	usertype := UserTypePath(logintype)
 
 	t := time.Now()
@@ -42,7 +43,8 @@ func ImageuploadP(c *gin.Context) {
 		Log.Error(err.Error())
 		return
 	}
-	var i int
+
+	uploaded := 0
 	for i, file := range images {
 		if i > 5 {
 			break
@@ -54,9 +56,22 @@ func ImageuploadP(c *gin.Context) {
 			Log.Error("upload image failed user: %s logintype: %d ,uid: %d,upload files: %s => %s, err %s", user, logintype,
 				uid, file.Filename, err.Error())
 		}
+		uploaded = i + 1
 		Log.Debug("user: %s logintype: %d ,uid: %d,upload files: %s => %s", user, logintype, uid, file.Filename, name)
 	}
-	c.String(http.StatusOK, fmt.Sprintf("%d files uploaded!", i+1))
+
+	tableName := baapDB.GImgTblName(logintype, uid)
+
+	img := baapDB.Imageinfo{
+		Logintype:   logintype,
+		ID:          uid,
+		Imageurl:    filepath.Join(usertype, suid, timestamp),
+		Description: "",
+		Created:     t,
+	}
+
+	baapDB.InsertImage(tableName, img)
+	c.String(http.StatusOK, fmt.Sprintf("%d files uploaded!", uploaded))
 }
 
 //UserTypePath get path for different login type
