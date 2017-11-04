@@ -60,17 +60,20 @@ func ImageuploadP(c *gin.Context) {
 		Log.Debug("user: %s logintype: %d ,uid: %d,upload files: %s => %s", user, logintype, uid, file.Filename, name)
 	}
 
-	tableName := baapDB.GImgTblName(logintype, uid)
+	if uploaded > 0 {
+		tableName := baapDB.GImgTblName(logintype, uid)
 
-	img := baapDB.Imageinfo{
-		Logintype:   logintype,
-		ID:          uid,
-		Imageurl:    filepath.Join(usertype, suid, timestamp),
-		Description: "",
-		Created:     t,
+		img := baapDB.Imageinfo{
+			Logintype:   logintype,
+			ID:          uid,
+			Imageurl:    filepath.Join(usertype, suid, timestamp),
+			Description: "",
+			Created:     t,
+		}
+
+		baapDB.InsertImage(tableName, img)
 	}
 
-	baapDB.InsertImage(tableName, img)
 	c.String(http.StatusOK, fmt.Sprintf("%d files uploaded!", uploaded))
 }
 
