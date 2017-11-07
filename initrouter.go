@@ -33,7 +33,7 @@ func initrouter(router *gin.Engine) {
 	authorized.Use(middleware.AuthorizeRequest())
 	{
 		authorized.GET("/loginusers", handlers.Loginusers)
-		authorized.GET("/dashboard", handlers.Dashboard)
+		authorized.GET("/dashboard/page/:pgid", handlers.Dashboard)
 
 		authorized.POST("/imageupload", handlers.ImageuploadP)
 		authorized.GET("/imageupload", handlers.ImageuploadG)

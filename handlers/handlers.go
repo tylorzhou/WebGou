@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
 	"time"
 
 	"github.com/WebGou/baapDB"
@@ -29,6 +30,9 @@ var (
 	ThirdTimeout time.Duration = 86400
 	//LuserTimeout local user DB session timeout
 	LuserTimeout time.Duration = 86400 * 7
+	//OnePageImage one page to load image
+	OnePageImage = 12
+	onetimePages = 10
 )
 
 var (
@@ -164,7 +168,7 @@ func GoogleAuthHandler(c *gin.Context) {
 	rm := Rememberme{}
 	rm.SetCookie(session, u.Email, glogin, ThirdTimeout)
 
-	c.Redirect(http.StatusFound, "/user/dashboard")
+	c.Redirect(http.StatusFound, "/user/dashboard/page/1")
 }
 
 //Loginusers handle login users
@@ -220,7 +224,7 @@ func FaceBookAuthHandler(c *gin.Context) {
 	}) // thirdpart provider do need persistent cookie
 	rm := Rememberme{}
 	rm.SetCookie(session, u.ID, flogin, ThirdTimeout)
-	c.Redirect(http.StatusFound, "/user/dashboard")
+	c.Redirect(http.StatusFound, "/user/dashboard/page/1")
 }
 
 // LoginHandler handles the login procedure.
@@ -274,7 +278,7 @@ func LoginCust(c *gin.Context) {
 		}
 		rm := Rememberme{}
 		rm.SetCookie(s, name, llogin, LuserTimeout)
-		c.Redirect(http.StatusFound, "/user/dashboard")
+		c.Redirect(http.StatusFound, "/user/dashboard/page/1")
 	}
 
 }
@@ -394,6 +398,16 @@ func GalleryDetail(c *gin.Context) {
 	c.HTML(http.StatusOK, "fluid-gallery.tmpl", gin.H{"pics": pics})
 }
 
+type pagination struct {
+	Bprivous bool
+	Bnext    bool
+	Iactive  int
+	PrevPage int
+	NextPage int
+	Lastpg   int
+	Pages    []int
+}
+
 //Dashboard just for test
 func Dashboard(c *gin.Context) {
 	s := sessions.Default(c)
@@ -408,7 +422,52 @@ func Dashboard(c *gin.Context) {
 		return
 	}
 
-	c.HTML(http.StatusOK, "dashboard.tmpl", gin.H{"user": user, "imagels": imagels})
+	pgid := c.Param("pgid")
+	ipg, err := strconv.ParseInt(pgid, 10, 64)
+
+	totalpg := len(imagels) / OnePageImage
+	if len(imagels)-totalpg*OnePageImage > 0 {
+		totalpg = totalpg + 1
+	}
+
+	if err != nil || int(ipg) > totalpg || int(ipg) < 1 {
+		if err != nil {
+			Log.Error("%s", err.Error())
+		}
+		c.AbortWithStatus(http.StatusNotFound)
+		return
+	}
+
+	pg := int(ipg) / onetimePages
+	if int(ipg)-pg*onetimePages > 0 {
+		pg = pg + 1
+	}
+
+	temppages := make([]int, 0, onetimePages)
+
+	for i := (pg-1)*onetimePages + 1; i <= pg*onetimePages && i <= totalpg; i++ {
+		temppages = append(temppages, i)
+	}
+
+	bshowpagation := len(temppages) > 0
+	pginfo := pagination{
+		Bprivous: int(ipg) > 1,
+		Bnext:    totalpg-int(ipg) > 0,
+		Iactive:  int(ipg),
+		Pages:    temppages,
+		PrevPage: int(ipg) - 1,
+		NextPage: int(ipg) + 1,
+		Lastpg:   totalpg,
+	}
+
+	var imginfo []baapDB.Imageinfo
+	if int(ipg)*OnePageImage > len(imagels) {
+		imginfo = imagels[(int(ipg)-1)*OnePageImage : len(imagels)]
+	} else {
+		imginfo = imagels[(int(ipg)-1)*OnePageImage : int(ipg)*OnePageImage]
+	}
+
+	c.HTML(http.StatusOK, "dashboard.tmpl", gin.H{"user": user, "imagels": imginfo, "bshowpagation": bshowpagation, "pginfo": pginfo})
 }
 
 //Logout when logout
