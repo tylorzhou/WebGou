@@ -22,7 +22,7 @@ type Imageinfo struct {
 	Uqid                  int64
 	Logintype, ID         int
 	Imageurl, Description string
-	Created               time.Time
+	Created               string
 }
 
 // ensureTableExists checks the table exists. If not, it creates it.
@@ -87,12 +87,34 @@ func InsertImage(tablename string, image Imageinfo) (insertid int64, err error) 
 	return
 }
 
+//DelImage delete image by timestamp
+func DelImage(tablename string, t time.Time) error {
+
+	statement := fmt.Sprintf("DELETE from %s where created=?", tablename)
+
+	stmtIns, err := db.Prepare(statement)
+	if err != nil {
+		dblog.Error("db prepare failed: %s", err.Error())
+		return err
+	}
+	defer stmtIns.Close()
+	_, err = stmtIns.Exec(t.Format(mysqlDateFormat))
+
+	return err
+}
+
 //GetAllImages to get all images from table
 func GetAllImages(tablename string) ([]Imageinfo, error) {
+
+	var err error
+	err = ensureTableExists(tablename)
+	if err != nil {
+		return nil, err
+	}
+
 	statement := fmt.Sprintf("SELECT uid, logintype, id, imageurl, description, created FROM %s ORDER BY created DESC",
 		tablename)
 	var rows *sql.Rows
-	var err error
 
 	rows, err = db.Query(statement)
 	if err != nil {
@@ -105,7 +127,7 @@ func GetAllImages(tablename string) ([]Imageinfo, error) {
 
 	for rows.Next() {
 		var img Imageinfo
-		err := rows.Scan(&img.Uqid, &img.Logintype, &img.ID, &img.Imageurl, &img.Description, img.Created)
+		err := rows.Scan(&img.Uqid, &img.Logintype, &img.ID, &img.Imageurl, &img.Description, &img.Created)
 		if err != nil {
 			dblog.Critical("GetAllImages Scan error: %s", err.Error())
 		}

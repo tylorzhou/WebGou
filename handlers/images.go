@@ -68,7 +68,7 @@ func ImageuploadP(c *gin.Context) {
 			ID:          uid,
 			Imageurl:    filepath.Join(usertype, suid, timestamp),
 			Description: "",
-			Created:     t,
+			Created:     t.Format("2006-01-02 15:04:05"),
 		}
 
 		baapDB.InsertImage(tableName, img)

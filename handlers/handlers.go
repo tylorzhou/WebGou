@@ -398,6 +398,73 @@ func GalleryDetail(c *gin.Context) {
 	c.HTML(http.StatusOK, "fluid-gallery.tmpl", gin.H{"pics": pics})
 }
 
+//GalleryDel delete
+func GalleryDel(c *gin.Context) {
+	s := sessions.Default(c)
+	//user := GetUser(s)
+	user := c.Param("user")
+
+	id := c.Param("id")
+	timestamp := c.Param("timestamp")
+
+	if (user != "guser" && user != "fuser" && user != "luser") || id == "" || timestamp == "" {
+		c.AbortWithStatus(http.StatusBadRequest)
+		return
+	}
+
+	_, uid, logintype := GetUser(s)
+
+	if strconv.Itoa(uid) != id || UserTypePath(logintype) != user {
+		c.AbortWithStatus(http.StatusBadRequest)
+		return
+	}
+
+	path := filepath.Join(exePath, "images", user, id, timestamp)
+
+	if _, err := os.Stat(path); err != nil {
+		if os.IsNotExist(err) {
+			// file does not exist
+			c.AbortWithStatus(http.StatusNotFound)
+
+		} else {
+			// other error
+			c.AbortWithStatus(http.StatusBadRequest)
+
+		}
+		return
+	}
+
+	tablename := baapDB.GImgTblName(logintype, uid)
+	timestr := fmt.Sprintf("%s-%s-%s %s:%s:%s", timestamp[0:4], timestamp[4:6], timestamp[6:8], timestamp[8:10], timestamp[10:12], timestamp[12:14])
+
+	t, err := time.ParseInLocation("2006-01-02 15:04:05", timestr, time.Local)
+
+	if err != nil {
+		Log.Error("ParseInLocation err %v", err)
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
+	err = baapDB.DelImage(tablename, t)
+	if err != nil {
+		Log.Error("DelImage err %v", err)
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
+
+	err = os.RemoveAll(path)
+	if err != nil {
+		Log.Error("remove image folder failed: %v", err)
+		return
+	}
+
+	s.AddFlash(id, "GalleryDelpgid")
+
+	s.Save()
+	pgid := c.DefaultQuery("pgid", "1")
+	c.Redirect(http.StatusFound, "/user/dashboard/page/"+pgid)
+
+}
+
 type pagination struct {
 	Bprivous bool
 	Bnext    bool
@@ -423,6 +490,7 @@ func Dashboard(c *gin.Context) {
 	}
 
 	pgid := c.Param("pgid")
+
 	ipg, err := strconv.ParseInt(pgid, 10, 64)
 
 	totalpg := len(imagels) / OnePageImage
@@ -430,7 +498,15 @@ func Dashboard(c *gin.Context) {
 		totalpg = totalpg + 1
 	}
 
-	if err != nil || int(ipg) > totalpg || int(ipg) < 1 {
+	// if redirect uri, should adjust the page id automatically
+	redirecInfo := s.Flashes("GalleryDelpgid")
+	if len(redirecInfo) > 0 {
+		if int(ipg) > totalpg && ipg > 1 {
+			ipg = ipg - 1
+		}
+	}
+
+	if err != nil || (int(ipg) > totalpg && int(ipg) != 1) || int(ipg) < 1 {
 		if err != nil {
 			Log.Error("%s", err.Error())
 		}

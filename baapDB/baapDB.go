@@ -53,7 +53,7 @@ func init() {
 	}
 	//db, err := sql.Open("mysql", "root:Altigen1234@tcp(<HOST>:<port>)/<dbname>"
 	con := dbcfg.User + ":" + dbcfg.Password + "@tcp" + "(" + dbcfg.IP + ":" + dbcfg.Port + ")" +
-		"/" + dbcfg.DBname
+		"/" + dbcfg.DBname + "?charset=utf8&loc=US%2FPacific&parseTime=true"
 	db, err = sql.Open("mysql", con)
 	if err != nil {
 		dblog.Critical("open database failed: %s", err.Error())
@@ -237,12 +237,12 @@ func GetFUser() map[string]string {
 }
 
 //Vtime for converting time.Time data
-type Vtime []byte
+//type Vtime []byte
 
 //Time for converting time.Time data
-func (t *Vtime) Time() (time.Time, error) {
-	return time.Parse(mysqlDateFormat, string(*t))
-}
+//func (t *Vtime) Time() (time.Time, error) {
+//	return time.Parse(mysqlDateFormat, string(*t))
+//}
 
 //AddLocalUser add local user
 func AddLocalUser(user, em, pw string) error {

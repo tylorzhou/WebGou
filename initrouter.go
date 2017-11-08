@@ -35,6 +35,8 @@ func initrouter(router *gin.Engine) {
 		authorized.GET("/loginusers", handlers.Loginusers)
 		authorized.GET("/dashboard/page/:pgid", handlers.Dashboard)
 
+		authorized.GET("/GalleryDel/:user/:id/:timestamp", handlers.GalleryDel)
+
 		authorized.POST("/imageupload", handlers.ImageuploadP)
 		authorized.GET("/imageupload", handlers.ImageuploadG)
 	}

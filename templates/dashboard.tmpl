@@ -33,6 +33,7 @@
     <link href="https://fonts.googleapis.com/css?family=Droid+Sans:400,700" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/baguettebox.js/1.8.1/baguetteBox.min.css">
 
+
 </head>
 <body>
 
@@ -189,6 +190,7 @@
     <div class="tz-gallery">
 
         <div class="row">
+        {{ $idactive := .pginfo.Iactive }}
          {{range .imagels}}
 	            <div class="col-sm-6 col-md-4">
                 <div class="thumbnail">
@@ -199,6 +201,13 @@
                         <h3>Thumbnail label</h3>
                         <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
                     </div>
+               
+                <div align="left">
+                    <a href="#" ><i class="fa fa-weixin" ></i></a>
+                    <span style="float:right;">
+                     <a href="/user/GalleryDel/{{.Imageurl}}?pgid={{$idactive}}"><i class="fa fa-trash" ></i></a>
+                    </span>
+                </div>
                 </div>
             </div>
         {{end}}
