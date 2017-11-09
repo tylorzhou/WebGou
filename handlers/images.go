@@ -74,7 +74,7 @@ func ImageuploadP(c *gin.Context) {
 		baapDB.InsertImage(tableName, img)
 	}
 
-	c.String(http.StatusOK, fmt.Sprintf("%d files uploaded!", uploaded))
+	c.HTML(http.StatusOK, "UploadRes.tmpl", gin.H{"SCInfo": fmt.Sprintf("%d files uploaded!", uploaded)})
 }
 
 //UserTypePath get path for different login type
