@@ -235,6 +235,7 @@ func LoginHandler(c *gin.Context) {
 	Log.Informational("Stored session: %v\n", state)
 	glink := getLoginURL(state, "google")
 	flink := getLoginURL(state, "facebook")
+
 	loginerr := ""
 	info := session.Flashes("loginerr")
 	if len(info) > 0 {
@@ -276,6 +277,7 @@ func LoginCust(c *gin.Context) {
 				MaxAge: 0,
 			})
 		}
+
 		rm := Rememberme{}
 		rm.SetCookie(s, name, llogin, LuserTimeout)
 		c.Redirect(http.StatusFound, "/user/dashboard/page/1")
@@ -502,7 +504,8 @@ func Dashboard(c *gin.Context) {
 	redirecInfo := s.Flashes("GalleryDelpgid")
 	if len(redirecInfo) > 0 {
 		if int(ipg) > totalpg && ipg > 1 {
-			ipg = ipg - 1
+			c.Redirect(http.StatusFound, "/user/dashboard/page/"+strconv.Itoa(int(ipg)-1))
+			return
 		}
 	}
 
@@ -554,7 +557,5 @@ func Logout(c *gin.Context) {
 		Path:   "/",
 		MaxAge: -1,
 	})
-	s.Set("logout", "1")
-	s.Save()
 	c.Redirect(http.StatusFound, "/login")
 }
