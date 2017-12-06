@@ -1,7 +1,9 @@
 package handlers
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -13,6 +15,11 @@ import (
 	"github.com/gin-gonic/contrib/sessions"
 	"github.com/gin-gonic/gin"
 )
+
+type imgdata struct {
+	Keywords    string
+	Description string
+}
 
 //ImageuploadG image upload for get function
 func ImageuploadG(c *gin.Context) {
@@ -72,6 +79,18 @@ func ImageuploadP(c *gin.Context) {
 		}
 
 		baapDB.InsertImage(tableName, img)
+	}
+
+	if uploaded > 0 {
+		var idata imgdata
+		idata.Keywords = c.PostForm("Keywords")
+		idata.Description = c.PostForm("Description")
+		b, err := json.Marshal(idata)
+		if err != nil {
+			Log.Error("json marshal failed for %d, %v", uid, err)
+			return
+		}
+		ioutil.WriteFile(filepath.Join(path, "config.json"), b, 0644)
 	}
 
 	c.HTML(http.StatusOK, "UploadRes.tmpl", gin.H{"SCInfo": fmt.Sprintf("%d files uploaded!", uploaded)})

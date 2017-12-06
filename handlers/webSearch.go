@@ -16,6 +16,7 @@ import (
 )
 
 var batchSize = 200
+var imgIndex bleve.Index
 
 //InitSearch init search
 func InitSearch() {
@@ -23,7 +24,8 @@ func InitSearch() {
 	indexPath := "index"
 	// open the index
 	done := make(chan struct{})
-	beerIndex, err := bleve.Open(indexPath)
+	var err error
+	imgIndex, err = bleve.Open(indexPath)
 	if err == bleve.ErrorIndexPathDoesNotExist {
 		Log.Informational("Creating new index...")
 		// create a mapping
@@ -31,7 +33,7 @@ func InitSearch() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		beerIndex, err = bleve.New(indexPath, indexMapping)
+		imgIndex, err = bleve.New(indexPath, indexMapping)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -39,7 +41,7 @@ func InitSearch() {
 		// index data in the background
 		go func() {
 			defer func() { done <- struct{}{} }()
-			err = Indexkeyword(beerIndex)
+			err = Indexkeyword(imgIndex)
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -53,7 +55,7 @@ func InitSearch() {
 
 	query := bleve.NewMatchQuery("20171108175602")
 	search := bleve.NewSearchRequest(query)
-	searchResults, err := beerIndex.Search(search)
+	searchResults, err := imgIndex.Search(search)
 
 	if err != nil {
 		Log.Error(err.Error())
@@ -76,7 +78,7 @@ func BuildIndexMapping() (mapping.IndexMapping, error) {
 
 	keywordMapping := bleve.NewDocumentMapping()
 
-	keywordMapping.AddFieldMappingsAt("keywords", englishTextFieldMapping)
+	keywordMapping.AddFieldMappingsAt("Keywords", englishTextFieldMapping)
 
 	indexMapping := bleve.NewIndexMapping()
 	indexMapping.AddDocumentMapping("config", keywordMapping)
