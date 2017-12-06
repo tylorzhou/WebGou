@@ -5,3 +5,4 @@ debug
 .vscode/launch.json
 static/*
 images/*
+index/*

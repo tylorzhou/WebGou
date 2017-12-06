@@ -3,8 +3,10 @@ package main
 import (
 	"io"
 	"os"
+	"runtime"
 
 	. "github.com/WebGou/baaplogger"
+	"github.com/WebGou/handlers"
 	"github.com/gin-gonic/contrib/sessions"
 	"github.com/gin-gonic/gin"
 )
@@ -15,6 +17,7 @@ var (
 
 func main() {
 	Log.Informational("service start")
+	Log.Informational("GOMAXPROCS: %d", runtime.GOMAXPROCS(-1))
 	gin.DefaultWriter = io.MultiWriter(Ginlog, os.Stdout)
 	gin.DefaultErrorWriter = gin.DefaultWriter
 	router := gin.Default()
@@ -30,6 +33,7 @@ func main() {
 	router.Use(sessions.Sessions("webgousession", store))
 
 	initrouter(router)
+	go handlers.InitSearch()
 
 	router.Run("127.0.0.1:9090")
 	Log.Informational("service end")
