@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Search all</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+   <style>  
+.btn-search {
+	  background: #424242;
+	  border-radius: 0;
+	  color: #fff;
+	  border-width: 1px;
+	  border-style: solid;
+	  border-color: #1c1c1c;
+	}
+	.btn-search:link, .btn-search:visited {
+	  color: #fff;
+	}
+	.btn-search:active, .btn-search:hover {
+	  background: #1c1c1c;
+	  color: #fff;
+	}
+</style> 
+</head>
+
+<body>
+<div class="container">
+<div>
+	<br>
+</div>
+<form action="" method="post" enctype="multipart/form-data" id="js-upload-form">
+<div class="input-group">
+
+	<input type="text" class="form-control" id="SrcTx" name="SrcTx" value="{{.lastTx}}">
+      <span class="input-group-btn">
+        <button class="btn btn-search" type="submit"><i class="fa fa-search fa-fw"></i> Search</button>
+      </span>
+
+</div>
+</form>
+</div>
+<div class="container">
+        {{if ne .msg ""}}
+            <div class="alert alert-danger alert-dismissable">
+            <strong>error!</strong> {{.msg}}
+            </div>
+        {{else}}
+							{{range $i, $e := .result}}
+							  <li>
+                    <a href="{{$e}}">
+                        <p>{{$e}}</p>
+                    </a>
+                </li>
+
+							{{end}}
+        {{end}}
+</div>
+
+</body>

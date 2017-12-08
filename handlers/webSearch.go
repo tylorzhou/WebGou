@@ -2,12 +2,17 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"log"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/gin-gonic/contrib/sessions"
+	"github.com/gin-gonic/gin"
 
 	. "github.com/WebGou/baaplogger"
 	"github.com/blevesearch/bleve"
@@ -155,4 +160,74 @@ func Indexkeyword(i bleve.Index) error {
 	timePerDoc := float64(indexDuration) / float64(count)
 	Log.Informational("Indexed %d documents, in %.2fs (average %.2fms/doc)", count, indexDurationSeconds, timePerDoc/float64(time.Millisecond))
 	return nil
+}
+
+//DoSearchP do the search
+func DoSearchP(c *gin.Context) {
+	SrcTx := c.PostForm("SrcTx")
+	if SrcTx == "" {
+		c.Redirect(http.StatusFound, "/search")
+	}
+
+	query := bleve.NewMatchQuery(SrcTx)
+	search := bleve.NewSearchRequest(query)
+	sr, err := imgIndex.Search(search)
+
+	if err != nil {
+		Log.Error(err.Error())
+		return
+	}
+
+	ser := []string{}
+	if sr.Total > 0 {
+		if sr.Request.Size > 0 {
+			//rv = fmt.Sprintf("%d matches, showing %d through %d, took %s\n", sr.Total, sr.Request.From+1, sr.Request.From+len(sr.Hits), sr.Took)
+			for _, hit := range sr.Hits {
+				//rv += fmt.Sprintf("%5d. %s (%f)\n", i+sr.Request.From+1, hit.ID, hit.Score)
+				ser = append(ser, hit.ID)
+			}
+		}
+	}
+
+	s := sessions.Default(c)
+	if len(ser) > 0 {
+		s.AddFlash(ser, "result")
+
+	} else {
+		s.AddFlash(fmt.Sprintf(`sorry, cannot find information for "%s"`, SrcTx), "srmsg")
+	}
+
+	s.AddFlash(SrcTx, "lastTx")
+	s.Save()
+	c.Redirect(http.StatusFound, "/search")
+	//Log.Informational("%v", searchResults)
+
+}
+
+//DoSearchG do search get
+func DoSearchG(c *gin.Context) {
+	s := sessions.Default(c)
+	srmsg := s.Flashes("srmsg")
+
+	msg := ""
+	if len(srmsg) > 0 {
+		msg = srmsg[0].(string)
+	}
+
+	result := []string{}
+	resultS := s.Flashes("result")
+	if len(resultS) > 0 {
+		result = resultS[0].([]string)
+	}
+
+	lastTxS := s.Flashes("lastTx")
+
+	lastTx := ""
+	if len(lastTxS) > 0 {
+		lastTx = lastTxS[0].(string)
+	}
+
+	s.Save()
+
+	c.HTML(http.StatusOK, "globSearch.tmpl", gin.H{"msg": msg, "lastTx": lastTx, "result": result})
 }
