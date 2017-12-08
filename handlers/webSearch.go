@@ -119,7 +119,8 @@ func Indexkeyword(i bleve.Index) error {
 		}
 		//ext := filepath.Ext(filename)
 		//docID := filename[:(len(filename) - len(ext))]
-		batch.Index(path, jsonDoc)
+		idx := strings.Index(path, "images")
+		batch.Index(path[idx:], jsonDoc)
 		batchCount++
 
 		if batchCount >= batchSize {

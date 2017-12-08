@@ -91,6 +91,16 @@ func ImageuploadP(c *gin.Context) {
 			return
 		}
 		ioutil.WriteFile(filepath.Join(path, "config.json"), b, 0644)
+
+		var jsonDoc interface{}
+		err = json.Unmarshal(b, &jsonDoc)
+		if err != nil {
+			Log.Error("json Unmarshal failed for %d, %v", uid, err)
+			return
+		}
+
+		idx := filepath.Join("images", usertype, suid, timestamp, "config.json")
+		imgIndex.Index(idx, jsonDoc)
 	}
 
 	c.HTML(http.StatusOK, "UploadRes.tmpl", gin.H{"SCInfo": fmt.Sprintf("%d files uploaded!", uploaded)})

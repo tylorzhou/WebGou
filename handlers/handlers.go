@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/WebGou/baapDB"
@@ -391,13 +392,76 @@ func GalleryDetail(c *gin.Context) {
 		return
 	}
 	var pics []string
+	var cfg = &imgdata{}
 	p := filepath.Join("/images", user, id, timestamp)
 	for _, f := range picsinfo {
+
+		if strings.Contains(f.Name(), "config.json") {
+			file, err := ioutil.ReadFile(filepath.Join(path, "config.json"))
+			if err != nil {
+				Log.Critical("ReadFile config.json failed: %s", err.Error())
+				continue
+			}
+
+			json.Unmarshal(file, &cfg)
+
+			continue
+		}
 
 		pics = append(pics, filepath.Join(p, f.Name()))
 	}
 
-	c.HTML(http.StatusOK, "fluid-gallery.tmpl", gin.H{"pics": pics})
+	c.HTML(http.StatusOK, "fluid-gallery.tmpl", gin.H{"pics": pics, "Keywords": cfg.Keywords, "Description": cfg.Description})
+}
+
+//GalleryDetailConfig get the config data
+func GalleryDetailConfig(c *gin.Context) {
+
+	var idata imgdata
+	idata.Keywords = c.PostForm("Keywords")
+	idata.Description = c.PostForm("Description")
+
+	user := c.Param("user")
+	id := c.Param("id")
+	timestamp := c.Param("timestamp")
+
+	if (user != "guser" && user != "fuser" && user != "luser") || id == "" || timestamp == "" {
+		c.AbortWithStatus(http.StatusBadRequest)
+		return
+	}
+
+	path := filepath.Join(exePath, "images", user, id, timestamp)
+
+	if _, err := os.Stat(path); err != nil {
+		if os.IsNotExist(err) {
+			// file does not exist
+			c.AbortWithStatus(http.StatusNotFound)
+
+		} else {
+			// other error
+			c.AbortWithStatus(http.StatusBadRequest)
+
+		}
+		return
+	}
+
+	b, err := json.Marshal(idata)
+	if err != nil {
+		Log.Error("json marshal failed for %v", err)
+		return
+	}
+	ioutil.WriteFile(filepath.Join(path, "config.json"), b, 0644)
+
+	var jsonDoc interface{}
+	err = json.Unmarshal(b, &jsonDoc)
+	if err != nil {
+		Log.Error("json Unmarshal failed for %v", err)
+		return
+	}
+
+	idx := filepath.Join("images", user, id, timestamp, "config.json")
+	imgIndex.Index(idx, jsonDoc)
+	c.String(http.StatusOK, "update imgage %s successfully!", timestamp)
 }
 
 //GalleryDel delete
@@ -459,6 +523,10 @@ func GalleryDel(c *gin.Context) {
 		return
 	}
 
+	Log.Informational("delete image: %s", path)
+
+	idx := filepath.Join("images", user, id, timestamp, "config.json")
+	imgIndex.Delete(idx)
 	s.AddFlash(id, "GalleryDelpgid")
 
 	s.Save()
@@ -544,6 +612,24 @@ func Dashboard(c *gin.Context) {
 		imginfo = imagels[(int(ipg)-1)*OnePageImage : len(imagels)]
 	} else {
 		imginfo = imagels[(int(ipg)-1)*OnePageImage : int(ipg)*OnePageImage]
+	}
+
+	for i := range imginfo {
+		path := imginfo[i].Imageurl
+		config := filepath.Join(exePath, "images", path, "config.json")
+
+		var cfg = &imgdata{}
+		file, err := ioutil.ReadFile(config)
+		if err != nil {
+			Log.Critical("ReadFile config.json failed: %s", err.Error())
+			continue
+		}
+
+		json.Unmarshal(file, &cfg)
+		imginfo[i].Description = cfg.Keywords
+		if len(imginfo[i].Description) > 38 {
+			imginfo[i].Description = imginfo[i].Description[0:35] + "..."
+		}
 	}
 
 	c.HTML(http.StatusOK, "dashboard.tmpl", gin.H{"user": user, "imagels": imginfo, "bshowpagation": bshowpagation, "pginfo": pginfo})
